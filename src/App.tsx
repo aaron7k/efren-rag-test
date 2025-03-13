@@ -141,7 +141,7 @@ function App() {
 
     try {
       const response = await axios.post<FlowiseResponse>(
-        'https://ai.efrenmartinezortiz-ia.com/api/v1/prediction/4231e849-4c2d-47ec-9e71-17594dad1ece',
+        'https://ai.efrenmartinezortiz-ia.com/api/v1/prediction/ff851bb8-5ac6-4157-8ad9-ff2199709d54',
         { question: userMessage },
         { headers: { 'Content-Type': 'application/json' } }
       );
