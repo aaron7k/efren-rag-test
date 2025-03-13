@@ -46,6 +46,16 @@ const DocumentModal: React.FC<ModalProps> = ({ isOpen, onClose, document, docume
         <div className="flex-1 overflow-y-auto p-4">
           <div className="prose max-w-none">
             <div className="text-gray-800 whitespace-pre-wrap">{document.pageContent}</div>
+            {document.metadata && (
+              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                <h4 className="text-sm font-semibold text-gray-700 mb-2">Metadata</h4>
+                {Object.entries(document.metadata).map(([key, value]) => (
+                  <div key={key} className="text-sm">
+                    <span className="font-medium">{key}:</span> {String(value)}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -107,6 +117,7 @@ function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [sessionId] = useState(() => 'session_' + Date.now());
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -142,18 +153,24 @@ function App() {
     try {
       const response = await axios.post<FlowiseResponse>(
         'https://ai.efrenmartinezortiz-ia.com/api/v1/prediction/ff851bb8-5ac6-4157-8ad9-ff2199709d54',
-        { question: userMessage },
+        { 
+          question: userMessage,
+          overrideConfig: {
+            sessionId: sessionId
+          }
+        },
         { headers: { 'Content-Type': 'application/json' } }
       );
 
       const botMessage = response.data.text || "Lo siento, no pude procesar tu mensaje.";
       
+      // Log to webhook if sourceDocuments exist
       if (response.data.sourceDocuments && response.data.sourceDocuments.length > 0) {
         try {
           await axios.post('https://api.efrenmartinezortiz-ia.com/webhook/rag/logs', {
             question: userMessage,
             answer: botMessage,
-            sourceDocuments: response.data.sourceDocuments.map(doc => doc.pageContent)
+            sourceDocuments: response.data.sourceDocuments
           });
         } catch (error) {
           console.error('Error logging to webhook:', error);
